@@ -52,3 +52,7 @@ class MatrixText(object):
                               self.font, 0, self.canvas_y, color, line_text)
             char_pos += self.line_len
             self.canvas_y += self.line_height
+
+    def clear(self):
+        self.offscreen_canvas.Clear()
+        self.offscreen_canvas = self.matrix.SwapOnVSync(self.offscreen_canvas)

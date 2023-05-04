@@ -23,6 +23,7 @@ if len(sys.argv) > 2:
 
     prevSong = ''
     currentSong = ''
+    is_playing = False
     lyrics = []
     lyrics_synced = False
     currentLyricLine = {}
@@ -33,6 +34,9 @@ if len(sys.argv) > 2:
                 resp = getSongInfo(username, token_path)
                 track = resp['item']
                 print('is_playing:', resp['is_playing'])
+                if (is_playing and not resp['is_playing']):
+                    matrix.clear()
+                is_playing = resp['is_playing']
                 currentSong = track['id']
                 if (prevSong != currentSong):
                     res = requests.get(
@@ -59,7 +63,7 @@ if len(sys.argv) > 2:
                 else:
                     currentLyricLine = {}
 
-                if (resp['is_playing']):
+                if (is_playing):
                     if ('words' in currentLyricLine):
                         line_1 = currentLyricLine['words']
                         line_2 = ''
