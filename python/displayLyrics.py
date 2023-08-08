@@ -4,6 +4,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from getSongInfo import getSongInfo
 from matrixText import MatrixText
+import threading
 import requests
 
 if len(sys.argv) > 2:
@@ -24,37 +25,50 @@ if len(sys.argv) > 2:
     prevSong = ''
     currentSong = ''
     is_playing = False
+    track = {}
     lyrics = []
     lyrics_synced = False
     currentLyricLine = {}
+    progress_ms = '0'
+
+    def fetchData(ev):
+        global is_playing
+        global track
+        global progress_ms
+        global prevSong
+        global currentSong
+        global lyrics_synced
+        global lyrics
+        resp = getSongInfo(username, token_path)
+        track = resp['item']
+        progress_ms = resp['progress_ms']
+        if (is_playing and not resp['is_playing']):
+            matrix.clear()
+        is_playing = resp['is_playing']
+        currentSong = track['id']
+        if (prevSong != currentSong):
+            res = requests.get(
+                'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
+            response = res.json()
+            lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
+            if (not response['error'] and response['lines']):
+                lyrics = response['lines']
+        prevSong = currentSong
+        threading.Timer(5, fetchData, [ev]).start()
+
+    th_event = threading.Event()
+    fetchData(th_event)
 
     try:
         while True:
             try:
-                resp = getSongInfo(username, token_path)
-                track = resp['item']
-                print('is_playing:', resp['is_playing'])
-                if (is_playing and not resp['is_playing']):
-                    matrix.clear()
-                is_playing = resp['is_playing']
-                currentSong = track['id']
-                if (prevSong != currentSong):
-                    res = requests.get(
-                        'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
-                    response = res.json()
-                    print('response:', response)
-                    lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
-                    if (not response['error'] and response['lines']):
-                        lyrics = response['lines']
-                prevSong = currentSong
                 current_i = 0
-                print('lyrics_synced:', lyrics_synced)
                 if (lyrics_synced):
                     currentLyricLine = lyrics[0]
                     for i in range(len(lyrics)):
                         line = lyrics[i]
                         # buffer 1 sec
-                        if (int(resp['progress_ms']) < int(line['startTimeMs']) - 1000):
+                        if (int(progress_ms) < int(line['startTimeMs']) - 1000):
                             if (i == 0):
                                 currentLyricLine = {}
                             break
@@ -73,7 +87,9 @@ if len(sys.argv) > 2:
                     else:
                         matrix.displayText(
                             track['name'], track['artists'][0]['name'])
-                time.sleep(1)
+                skip_seconds = 1
+                progress_ms = str(int(progress_ms) + skip_seconds * 1000)
+                time.sleep(skip_seconds)
             except Exception as e:
                 print(e)
                 time.sleep(1)
