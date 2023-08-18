@@ -60,7 +60,8 @@ if len(sys.argv) > 2:
                 if (not response['error'] and response['lines']):
                     lyrics = response['lines']
             prevSong = currentSong
-            threading.Timer(1, fetchData, [ev]).start()
+            sleep = 1 if is_playing else 5
+            threading.Timer(sleep, fetchData, [ev]).start()
         except Exception as e:
             print(e)
             threading.Timer(10, fetchData, [ev]).start()
