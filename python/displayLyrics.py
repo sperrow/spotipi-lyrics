@@ -39,22 +39,29 @@ if len(sys.argv) > 2:
         global currentSong
         global lyrics_synced
         global lyrics
-        resp = getSongInfo(username, token_path)
-        track = resp['item']
-        progress_ms = resp['progress_ms']
-        if (is_playing and not resp['is_playing']):
-            matrix.clear()
-        is_playing = resp['is_playing']
-        currentSong = track['id']
-        if (prevSong != currentSong):
-            res = requests.get(
-                'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
-            response = res.json()
-            lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
-            if (not response['error'] and response['lines']):
-                lyrics = response['lines']
-        prevSong = currentSong
-        threading.Timer(5, fetchData, [ev]).start()
+        try:
+            start = time.time()
+            resp = getSongInfo(username, token_path)
+            end = time.time()
+            # print('response time:', end - start)
+            track = resp['item']
+            progress_ms = resp['progress_ms']
+            if (is_playing and not resp['is_playing']):
+                matrix.clear()
+            is_playing = resp['is_playing']
+            currentSong = track['id']
+            if (prevSong != currentSong):
+                res = requests.get(
+                    'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
+                response = res.json()
+                lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
+                if (not response['error'] and response['lines']):
+                    lyrics = response['lines']
+            prevSong = currentSong
+            threading.Timer(1, fetchData, [ev]).start()
+        except Exception as e:
+            print(e)
+            threading.Timer(10, fetchData, [ev]).start()
 
     th_event = threading.Event()
     fetchData(th_event)
