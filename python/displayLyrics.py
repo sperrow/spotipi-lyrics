@@ -51,6 +51,8 @@ if len(sys.argv) > 2:
             is_playing = resp['is_playing']
             currentSong = track['id']
             if (prevSong != currentSong):
+                lyrics = []
+                lyrics_synced = False
                 res = requests.get(
                     'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
                 response = res.json()
