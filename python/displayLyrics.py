@@ -3,13 +3,14 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 from getSongInfo import getSongInfo
+from getLyrics import getLyrics
 from matrixText import MatrixText
 import threading
-import requests
 
 if len(sys.argv) > 2:
     username = sys.argv[1]
     token_path = sys.argv[2]
+    sp_dc = sys.argv[3]
 
     # Configures logger for storing song data
     logging.basicConfig(format='%(asctime)s %(message)s',
@@ -22,6 +23,7 @@ if len(sys.argv) > 2:
 
     matrix = MatrixText()
 
+    skip_seconds = 0.5
     prevSong = ''
     currentSong = ''
     is_playing = False
@@ -29,7 +31,9 @@ if len(sys.argv) > 2:
     lyrics = []
     lyrics_synced = False
     currentLyricLine = {}
+    currentLyricIndex = -1
     progress_ms = '0'
+    counter = 0
 
     def fetchData(ev):
         global is_playing
@@ -39,26 +43,32 @@ if len(sys.argv) > 2:
         global currentSong
         global lyrics_synced
         global lyrics
+        global currentLyricLine
+        global currentLyricIndex
         try:
             start = time.time()
-            resp = getSongInfo(username, token_path)
+            resp1 = getSongInfo(username, token_path)
             end = time.time()
             # print('response time:', end - start)
-            track = resp['item']
-            progress_ms = resp['progress_ms']
-            if (is_playing and not resp['is_playing']):
+            track = resp1['item']
+            progress_ms = resp1['progress_ms']
+            if (is_playing and not resp1['is_playing']):
                 matrix.clear()
-            is_playing = resp['is_playing']
+            is_playing = resp1['is_playing']
             currentSong = track['id']
             if (prevSong != currentSong):
                 lyrics = []
                 lyrics_synced = False
-                res = requests.get(
-                    'https://spotify-lyric-api.herokuapp.com/?trackid=' + currentSong)
-                response = res.json()
-                lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
-                if (not response['error'] and response['lines']):
-                    lyrics = response['lines']
+                currentLyricLine = {}
+                currentLyricIndex = -1
+                resp2 = getLyrics(sp_dc, currentSong)
+                if (type(resp2) is dict):
+                    response = resp2['lyrics']
+                    lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
+                    if (response['lines']):
+                        lyrics = response['lines']
+                else:
+                    print('resp2:', resp2)
             prevSong = currentSong
             sleep = 1 if is_playing else 5
             threading.Timer(sleep, fetchData, [ev]).start()
@@ -77,10 +87,14 @@ if len(sys.argv) > 2:
                     currentLyricLine = lyrics[0]
                     for i in range(len(lyrics)):
                         line = lyrics[i]
-                        # buffer 1 sec
-                        if (int(progress_ms) < int(line['startTimeMs']) - 1000):
+                        # add skip_seconds to show current lyric slighty early
+                        currentStartTimeMs = int(line['startTimeMs']) - int(skip_seconds * 1000)
+                        # current lyric is first line that is greater than progress_ms
+                        if (int(progress_ms) < currentStartTimeMs):
                             if (i == 0):
+                                # song's first lyric hasn't started yet
                                 currentLyricLine = {}
+                                currentLyricIndex = -1
                             break
                         currentLyricLine = line
                         current_i = i
@@ -97,8 +111,7 @@ if len(sys.argv) > 2:
                     else:
                         matrix.displayText(
                             track['name'], track['artists'][0]['name'])
-                skip_seconds = 1
-                progress_ms = str(int(progress_ms) + skip_seconds * 1000)
+                progress_ms = str(int(progress_ms) + int(skip_seconds * 1000))
                 time.sleep(skip_seconds)
             except Exception as e:
                 print(e)

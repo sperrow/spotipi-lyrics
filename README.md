@@ -1,6 +1,6 @@
 # Spotipi
 ### Overview
-This project is to display lyrics from the Spotify web api on a 64x32 led matrix.
+This project is to display lyrics from the Spotify web api on a 64x32 led matrix. Recommend using a RPi 3 or higher (Zero is too slow for this).
 ### Getting Started
 Guide: https://www.ryanwardtech.com/guides/how-to-install-spotify-cover-art-display/
 * Create a new application within the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications) <br />

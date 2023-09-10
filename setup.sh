@@ -6,6 +6,9 @@ sudo apt-get install libopenjp2-7 python3-dbus
 echo "Installing spotipy library:"
 pip install spotipy --upgrade
 
+echo "Installing syrics library:"
+pip install syrics --upgrade
+
 echo "Installing pillow library:"
 pip install pillow --upgrade
 
@@ -26,6 +29,9 @@ read spotify_username
 
 echo "Enter the full path to your spotify token:"
 read spotify_token_path
+
+echo "Enter your sp_dc cookie for lyrics (guide https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc):"
+read sp_dc
 
 install_path=$(pwd)
 
@@ -55,7 +61,7 @@ echo "...done"
 
 echo "Creating spotipi service:"
 sudo cp ./config/spotipi.service /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=python ${install_path}/python/displayLyrics.py ${spotify_username} ${spotify_token_path} < /dev/zero &> /dev/null &" /etc/systemd/system/spotipi.service
+sudo sed -i -e "/\[Service\]/a ExecStart=python ${install_path}/python/displayLyrics.py ${spotify_username} ${spotify_token_path} ${sp_dc} < /dev/zero &> /dev/null &" /etc/systemd/system/spotipi.service
 sudo mkdir /etc/systemd/system/spotipi.service.d
 spotipi_env_path=/etc/systemd/system/spotipi.service.d/spotipi_env.conf
 sudo touch $spotipi_env_path
