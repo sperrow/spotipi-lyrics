@@ -33,7 +33,7 @@ if len(sys.argv) > 2:
     currentLyricLine = {}
     currentLyricIndex = -1
     progress_ms = '0'
-    counter = 0
+    scroll_counter = 0
 
     def fetchData(ev):
         global is_playing
@@ -45,6 +45,7 @@ if len(sys.argv) > 2:
         global lyrics
         global currentLyricLine
         global currentLyricIndex
+        global scroll_counter
         try:
             start = time.time()
             resp1 = getSongInfo(username, token_path)
@@ -61,6 +62,7 @@ if len(sys.argv) > 2:
                 lyrics_synced = False
                 currentLyricLine = {}
                 currentLyricIndex = -1
+                scroll_counter = 0
                 resp2 = getLyrics(sp_dc, currentSong)
                 if (type(resp2) is dict):
                     response = resp2['lyrics']
@@ -102,15 +104,24 @@ if len(sys.argv) > 2:
                     currentLyricLine = {}
 
                 if (is_playing):
+                    # show lyrics
                     if ('words' in currentLyricLine):
                         line_1 = currentLyricLine['words']
                         line_2 = ''
                         if (current_i+1 < len(lyrics) and 'words' in lyrics[current_i+1]):
                             line_2 = lyrics[current_i+1]['words']
-                        matrix.displayText(line_1, line_2)
+                        if (current_i == currentLyricIndex):
+                            # scroll if the line is long and slow
+                            scroll_counter += 1
+                        else:
+                            scroll_counter = 0
+                        currentLyricIndex = current_i
+                        matrix.displayText(line_1, line_2, scroll_counter)
+                    # show title and artist
                     else:
                         matrix.displayText(
-                            track['name'], track['artists'][0]['name'])
+                            track['name'], track['artists'][0]['name'], scroll_counter, False)
+                        scroll_counter += 1
                 progress_ms = str(int(progress_ms) + int(skip_seconds * 1000))
                 time.sleep(skip_seconds)
             except Exception as e:
