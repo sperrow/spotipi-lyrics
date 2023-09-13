@@ -1,6 +1,8 @@
 # Spotipi
 ### Overview
 This project is to display lyrics from the Spotify web api on a 64x32 led matrix. Recommend using a RPi 3 or higher (Zero is too slow for this).
+Originally forked from Ryan Ward's project for displaying cover art: https://github.com/ryanwa18/spotipi
+I also 3d printed a case for it from this guide: https://www.instructables.com/P5-LED-Panel-With-Raspberry-Pi/
 ### Getting Started
 Guide: https://www.ryanwardtech.com/guides/how-to-install-spotify-cover-art-display/
 * Create a new application within the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications) <br />
@@ -12,7 +14,7 @@ git clone https://github.com/sperrow/spotipi-lyrics
 ```
 * Next go ahead and change into the directory using 
 ```
-cd spotipi
+cd spotipi-lyrics
 ```
 * Run the generate token script and enter the prompted spotify credentials using
 ```
@@ -24,12 +26,8 @@ bash generate-token.sh
    
 * Install the software: <br />
 ```
-cd spotipi
+cd spotipi-lyrics
 sudo bash setup.sh
-```
-* Edit settings on the web app: <br />
-```
-navigate to http://<raspberrypi_hostname or ip_address> within a web browser
 ```
 
 ### Final Product
