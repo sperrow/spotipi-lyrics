@@ -1,4 +1,7 @@
 # Spotipi
+### Video
+https://www.youtube.com/shorts/PKM1I0vdbhE
+
 ### Overview
 This project is to display lyrics from the Spotify web api on a 64x32 led matrix.
 * Recommend using a RPi 3 or higher (Zero is too slow for this).
@@ -30,6 +33,3 @@ bash generate-token.sh
 cd spotipi-lyrics
 sudo bash setup.sh
 ```
-
-### Final Product
-https://www.youtube.com/shorts/PKM1I0vdbhE
