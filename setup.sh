@@ -9,9 +9,6 @@ pip install spotipy --upgrade
 echo "Installing syrics library:"
 pip install syrics --upgrade
 
-echo "Installing pillow library:"
-pip install pillow --upgrade
-
 echo "Installing flask library:"
 pip install flask --upgrade
 
@@ -27,7 +24,7 @@ read spotify_redirect_uri
 echo "Enter your spotify username:"
 read spotify_username
 
-echo "Enter the full path to your spotify token:"
+echo "Enter the full path to your spotify token (e.g. /home/raspberrypi/spotipi-lyrics/.cache):"
 read spotify_token_path
 
 echo "Enter your sp_dc cookie for lyrics (guide https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc):"
