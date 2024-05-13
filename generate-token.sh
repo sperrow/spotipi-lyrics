@@ -20,4 +20,4 @@ python python/generateToken.py $spotify_username
 
 echo
 echo "###### Spotify Token Created ######"
-echo "Filename: .cache-$spotify_username"
+echo "Filename: .cache"
