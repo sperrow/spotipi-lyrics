@@ -25,17 +25,31 @@ class MatrixText(object):
         self.matrix = RGBMatrix(options=options)
 
         self.offscreen_canvas = self.matrix.CreateFrameCanvas()
-        font_path = os.path.join(dir, "../fonts/4x6.bdf")
         self.font = graphics.Font()
-        self.font.LoadFont(font_path)
+        self.setLanguage('en')
         self.textColor1 = graphics.Color(223, 255, 223)
         self.textColor2 = graphics.Color(52, 255, 103)
+
+    def setLanguage(self, language):
+        dir = os.path.dirname(__file__)
+        font_path = os.path.join(dir, "../fonts/4x6.bdf")
+        self.canvas_y_init = 6
         self.line_len = 16
         self.line_height = 8
         self.max_lines = 4
         self.scroll_speed = 2
+        if(language == 'ja' or language[0] == 'z'):
+            # zpix is a larger font size
+            font_path = os.path.join(dir, "../fonts/zpix.bdf")
+            self.canvas_y_init = 12
+            self.line_len = 5
+            self.line_height = 12
+            self.max_lines = 2
+            self.scroll_speed = 3
+        
+        self.font.LoadFont(font_path)
 
-    def displayText(self, line_1, line_2, scroll_counter=0, is_lyrics=True):
+    def displayText(self, line_1, line_2, scroll_counter, is_lyrics=True):
         self.offscreen_canvas.Clear()
         fragments_1 = self.breakText(line_1)
         fragments_2 = self.breakText(line_2)
@@ -54,7 +68,7 @@ class MatrixText(object):
         return fragments
     
     def draw(self, fragments_1, fragments_2, scroll_counter, is_lyrics=True):
-        self.canvas_y = 6
+        self.canvas_y = self.canvas_y_init
         show_2 = True
         if (scroll_counter > 0):
             scroll_height = scroll_counter * self.scroll_speed
@@ -64,7 +78,7 @@ class MatrixText(object):
                 line_count += len(fragments_2)
             if (line_count > self.max_lines):
                 # reset to initial height if it's been scrolling for a while
-                reset = (line_count - 3) * self.line_height
+                reset = (line_count - (self.max_lines - 1)) * self.line_height
                 scroll_height = scroll_height % reset
                 self.canvas_y -= scroll_height
                 # line_2 should be shown if it's the artist, not if it's a lyric

@@ -67,6 +67,7 @@ if len(sys.argv) > 2:
                 if (type(resp2) is dict):
                     response = resp2['lyrics']
                     lyrics_synced = 'syncType' in response and response['syncType'] == 'LINE_SYNCED'
+                    matrix.setLanguage(response['language'])
                     if (response['lines']):
                         lyrics = response['lines']
                 else:
