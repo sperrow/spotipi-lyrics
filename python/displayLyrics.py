@@ -1,5 +1,6 @@
 import time
 import sys
+import os
 import logging
 from logging.handlers import RotatingFileHandler
 from getSongInfo import getSongInfo
@@ -7,10 +8,12 @@ from getLyrics import getLyrics
 from matrixText import MatrixText
 import threading
 
-if len(sys.argv) > 2:
+if len(sys.argv) > 1:
     username = sys.argv[1]
-    token_path = sys.argv[2]
-    sp_dc = sys.argv[3]
+    sp_dc = sys.argv[2]
+
+    dir = os.path.dirname(os.path.dirname(__file__))
+    token_path = os.path.join(dir, '.cache')
 
     # Configures logger for storing song data
     logging.basicConfig(format='%(asctime)s %(message)s',
