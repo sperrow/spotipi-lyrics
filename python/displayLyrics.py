@@ -50,10 +50,7 @@ if len(sys.argv) > 1:
         global currentLyricIndex
         global scroll_counter
         try:
-            start = time.time()
             resp1 = getSongInfo(username, token_path)
-            end = time.time()
-            # print('response time:', end - start)
             track = resp1['item']
             progress_ms = resp1['progress_ms']
             if (is_playing and not resp1['is_playing']):
@@ -74,12 +71,12 @@ if len(sys.argv) > 1:
                     if (response['lines']):
                         lyrics = response['lines']
                 else:
-                    print('resp2:', resp2)
+                    logger.error('getLyrics: %s', resp2)
             prevSong = currentSong
             sleep = 1 if is_playing else 5
             threading.Timer(sleep, fetchData, [ev]).start()
         except Exception as e:
-            print(e)
+            logger.error('fetchData: %s', e)
             threading.Timer(10, fetchData, [ev]).start()
 
     th_event = threading.Event()
@@ -129,7 +126,7 @@ if len(sys.argv) > 1:
                 progress_ms = str(int(progress_ms) + int(skip_seconds * 1000))
                 time.sleep(skip_seconds)
             except Exception as e:
-                print(e)
+                logger.error('main: %s', e)
                 time.sleep(1)
     except KeyboardInterrupt:
         sys.exit(0)
