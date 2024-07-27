@@ -1,16 +1,22 @@
 #!/bin/bash
 
 echo "Ensure packages are installed:"
-sudo apt-get install libopenjp2-7 python3-dbus
+sudo apt-get install libopenjp2-7 python3-pip python3-dbus python3-venv
+
+echo "Creating python virtual environment..."
+venv_directory=spotipi_venv
+python3 -m venv $venv_directory --system-site-packages
+source $venv_directory/bin/activate
+echo "Virtual environment activated"
 
 echo "Installing spotipy library:"
-pip install spotipy --upgrade
+pip3 install spotipy --upgrade
 
 echo "Installing syrics library:"
-pip install syrics --upgrade
+pip3 install syrics --upgrade
 
 echo "Installing flask library:"
-pip install flask --upgrade
+pip3 install flask --upgrade
 
 echo "Enter your Spotify Client ID:"
 read spotify_client_id
@@ -55,7 +61,7 @@ echo "...done"
 
 echo "Creating spotipi service:"
 sudo cp ./config/spotipi.service /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=python ${install_path}/python/displayLyrics.py ${spotify_username} ${sp_dc} < /dev/zero &> /dev/null &" /etc/systemd/system/spotipi.service
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/displayLyrics.py ${spotify_username} ${sp_dc} < /dev/zero &> /dev/null &" /etc/systemd/system/spotipi.service
 sudo mkdir /etc/systemd/system/spotipi.service.d
 spotipi_env_path=/etc/systemd/system/spotipi.service.d/spotipi_env.conf
 sudo touch $spotipi_env_path
@@ -70,7 +76,7 @@ echo "...done"
 
 echo "Creating spotipi-client service:"
 sudo cp ./config/spotipi-client.service /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=python ${install_path}/python/client/app.py &" /etc/systemd/system/spotipi-client.service
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/client/app.py &" /etc/systemd/system/spotipi-client.service
 sudo systemctl daemon-reload
 sudo systemctl start spotipi-client
 sudo systemctl enable spotipi-client

@@ -1,5 +1,12 @@
+sudo apt install python3-pip python3-venv
+
+echo "Creating python virtual environment..."
+python3 -m venv spotipi_venv --system-site-packages
+source spotipi_venv/bin/activate
+echo "Virtual environment activated"
+
 echo "Installing spotipy library:"
-pip install spotipy --upgrade
+pip3 install spotipy --upgrade
 
 echo "Enter your Spotify Client ID:"
 read spotify_client_id
@@ -16,8 +23,11 @@ export SPOTIPY_REDIRECT_URI=$spotify_redirect_uri
 echo "Enter your spotify username:"
 read spotify_username
 
-python python/generateToken.py $spotify_username
+python3 python/generateToken.py $spotify_username
+sudo chmod a+rx .cache
 
 echo
 echo "###### Spotify Token Created ######"
 echo "Filename: .cache"
+
+deactivate

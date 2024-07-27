@@ -21,6 +21,8 @@ class MatrixText(object):
         options.gpio_slowdown = int(config['DEFAULT']['gpio_slowdown'])
         options.brightness = int(config['DEFAULT']['brightness'])
         options.limit_refresh_rate_hz = int(config['DEFAULT']['refresh_rate'])
+        # the daemon user doesn't have permissions for the parent folders
+        options.drop_privileges = False
 
         self.matrix = RGBMatrix(options=options)
 
