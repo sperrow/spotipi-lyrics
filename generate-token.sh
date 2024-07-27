@@ -24,6 +24,7 @@ echo "Enter your spotify username:"
 read spotify_username
 
 python3 python/generateToken.py $spotify_username
+sudo chmod a+rx .cache
 
 echo
 echo "###### Spotify Token Created ######"
