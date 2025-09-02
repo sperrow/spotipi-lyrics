@@ -47,6 +47,10 @@ echo "Removing rgb-matrix setup script:"
 sudo rm rgb-matrix.sh
 echo "...done"
 
+echo "Installing bindings to venv"
+cd rpi-rgb-led-matrix/
+make install-python
+
 echo "Removing spotipi service if it exists:"
 sudo systemctl stop spotipi
 sudo rm -rf /etc/systemd/system/spotipi.*
