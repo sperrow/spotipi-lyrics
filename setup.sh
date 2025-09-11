@@ -49,8 +49,8 @@ echo "...done"
 
 echo "Installing bindings to venv"
 cd rpi-rgb-led-matrix/
-make install-python
-cd ..
+sudo make install-python
+cd ${install_path}
 
 echo "Removing spotipi service if it exists:"
 sudo systemctl stop spotipi
