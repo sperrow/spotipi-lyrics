@@ -16,7 +16,7 @@ echo "Installing syrics library:"
 pip3 install syrics --upgrade
 
 echo "Installing flask library:"
-pip3 install flask --upgrade
+pip3 install flask
 
 echo "Enter your Spotify Client ID:"
 read spotify_client_id
