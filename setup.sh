@@ -64,13 +64,13 @@ echo "...done"
 echo "Creating spotipi service:"
 sudo cp ./config/spotipi.service /etc/systemd/system/
 sudo sed -i -e "s|EnvironmentFile=.*|EnvironmentFile=${install_path}/.spotipi-config|" /etc/systemd/system/spotipi.service
-sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/displayLyrics.py \${SPOTIPY_USERNAME} \${SPOTIPY_SP_DC} < /dev/zero &> /dev/null &" /etc/systemd/system/spotipi.service
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/displayLyrics.py \${SPOTIPY_USERNAME} \${SPOTIPY_SP_DC}" /etc/systemd/system/spotipi.service
 sudo systemctl daemon-reload
 echo "...done"
 
 echo "Creating spotipi-client service:"
 sudo cp ./config/spotipi-client.service /etc/systemd/system/
-sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/client/app.py &" /etc/systemd/system/spotipi-client.service
+sudo sed -i -e "/\[Service\]/a ExecStart=${install_path}/spotipi_venv/bin/python3 ${install_path}/python/client/app.py" /etc/systemd/system/spotipi-client.service
 sudo systemctl daemon-reload
 echo "...done"
 

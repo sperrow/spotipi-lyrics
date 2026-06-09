@@ -7,22 +7,38 @@ from getSongInfo import getSongInfo
 from getLyrics import getLyrics
 from matrixText import MatrixText
 
-LOG_FILE = 'spotipy.log'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_FILE = os.path.join(BASE_DIR, 'spotipy.log')
 SKIP_SECONDS = 0.5
+FETCH_SECONDS_PLAYING = 1
+FETCH_SECONDS_IDLE = 5
 RETRY_SECONDS = 10
+LYRICS_RETRY_SECONDS = 10
 
 
 def configure_logger():
-    logging.basicConfig(
-        format='%(asctime)s %(message)s',
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    if logger.handlers:
+        return logger
+
+    formatter = logging.Formatter(
+        fmt='%(asctime)s %(message)s',
         datefmt='%m/%d/%Y %I:%M:%S %p',
-        filename=LOG_FILE,
-        level=logging.INFO,
     )
-    logger = logging.getLogger('spotipy_logger')
-    handler = RotatingFileHandler(LOG_FILE, maxBytes=2000, backupCount=3)
+    handler = RotatingFileHandler(LOG_FILE, maxBytes=100000, backupCount=3)
+    handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
+
+
+def safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 class DisplayLyricsApp:
@@ -37,30 +53,43 @@ class DisplayLyricsApp:
         self.track = None
         self.lyrics = []
         self.lyrics_synced = False
-        self.current_lyric_line = {}
         self.current_lyric_index = -1
         self.progress_ms = 0
         self.scroll_counter = 0
         self.prev_song_id = None
+        self.next_fetch_time = 0
+        self.lyrics_retry_song_id = None
+        self.next_lyrics_retry_time = 0
 
     def run(self):
         self.logger.info('Starting DisplayLyricsApp for user %s', self.username)
         while True:
             try:
-                if not self.fetch_spotify_state():
-                    time.sleep(RETRY_SECONDS)
-                    continue
+                self.maybe_fetch_spotify_state()
 
                 if self.is_playing:
                     self.render()
                     self.progress_ms += int(SKIP_SECONDS * 1000)
                 time.sleep(SKIP_SECONDS)
-            except KeyboardInterrupt:
-                self.logger.info('KeyboardInterrupt received, exiting.')
-                sys.exit(0)
-            except Exception as exc:
-                self.logger.error('main loop error: %s', exc)
+            except Exception:
+                self.logger.exception('main loop error')
                 time.sleep(1)
+
+    def maybe_fetch_spotify_state(self):
+        if time.monotonic() < self.next_fetch_time:
+            return
+
+        try:
+            fetch_succeeded = self.fetch_spotify_state()
+        except Exception:
+            self.logger.exception('Spotify state fetch error')
+            fetch_succeeded = False
+
+        if fetch_succeeded:
+            delay = FETCH_SECONDS_PLAYING if self.is_playing else FETCH_SECONDS_IDLE
+        else:
+            delay = RETRY_SECONDS
+        self.next_fetch_time = time.monotonic() + delay
 
     def fetch_spotify_state(self):
         response = getSongInfo(self.username, self.token_path)
@@ -76,7 +105,7 @@ class DisplayLyricsApp:
             self.matrix.clear()
 
         self.is_playing = is_playing
-        self.progress_ms = int(response.get('progress_ms', 0))
+        self.progress_ms = safe_int(response.get('progress_ms'))
 
         if item is None:
             self.logger.warning('No currently playing item returned from Spotify')
@@ -84,18 +113,27 @@ class DisplayLyricsApp:
 
         current_song_id = item.get('id')
         if current_song_id and current_song_id != self.prev_song_id:
-            self.logger.info('Track changed: %s', current_song_id)
-            self.track = item
-            self.prev_song_id = current_song_id
-            self.reset_lyrics_state()
-            self.fetch_lyrics_for_current_track(current_song_id)
+            if current_song_id != self.lyrics_retry_song_id:
+                self.logger.info('Track changed: %s', current_song_id)
+                self.track = item
+                self.reset_lyrics_state()
+                self.lyrics_retry_song_id = current_song_id
+                self.next_lyrics_retry_time = 0
+
+            if time.monotonic() < self.next_lyrics_retry_time:
+                return True
+
+            if self.fetch_lyrics_for_current_track(current_song_id):
+                self.prev_song_id = current_song_id
+                self.lyrics_retry_song_id = None
+            else:
+                self.next_lyrics_retry_time = time.monotonic() + LYRICS_RETRY_SECONDS
 
         return True
 
     def reset_lyrics_state(self):
         self.lyrics = []
         self.lyrics_synced = False
-        self.current_lyric_line = {}
         self.current_lyric_index = -1
         self.scroll_counter = 0
 
@@ -103,23 +141,32 @@ class DisplayLyricsApp:
         response = getLyrics(self.sp_dc, track_id)
         if not isinstance(response, dict) or 'lyrics' not in response:
             self.logger.error('getLyrics returned invalid data: %s', response)
-            return
+            return False
 
         lyrics_payload = response['lyrics']
+        if not isinstance(lyrics_payload, dict):
+            self.logger.error('getLyrics returned invalid lyrics payload: %s', lyrics_payload)
+            return False
+
         self.lyrics_synced = lyrics_payload.get('syncType') == 'LINE_SYNCED'
         language = lyrics_payload.get('language')
         if language:
             self.matrix.setLanguage(language)
 
-        self.lyrics = lyrics_payload.get('lines') or []
+        lines = lyrics_payload.get('lines') or []
+        if not isinstance(lines, list):
+            self.logger.error('getLyrics returned invalid lyric lines: %s', lines)
+            return False
+
+        self.lyrics = lines
         self.logger.info('Loaded %d lyric lines (synced=%s)', len(self.lyrics), self.lyrics_synced)
+        return True
 
     def render(self):
         if self.lyrics_synced and self.lyrics:
             current_index = self.find_current_lyric_index()
             if current_index >= 0:
-                self.current_lyric_line = self.lyrics[current_index]
-                self.display_lyrics(current_index)
+                self.display_lyrics(current_index, self.lyrics[current_index])
                 return
 
         self.display_track_info()
@@ -127,14 +174,14 @@ class DisplayLyricsApp:
     def find_current_lyric_index(self):
         current_index = -1
         for index, line in enumerate(self.lyrics):
-            start_ms = int(line.get('startTimeMs', 0)) - int(SKIP_SECONDS * 1000)
+            start_ms = safe_int(line.get('startTimeMs')) - int(SKIP_SECONDS * 1000)
             if self.progress_ms < start_ms:
                 break
             current_index = index
         return current_index
 
-    def display_lyrics(self, current_index):
-        if 'words' not in self.current_lyric_line:
+    def display_lyrics(self, current_index, current_lyric_line):
+        if 'words' not in current_lyric_line:
             self.logger.debug('Current lyric line missing words, falling back to track info')
             self.display_track_info()
             return
@@ -151,7 +198,7 @@ class DisplayLyricsApp:
 
         self.current_lyric_index = current_index
         self.matrix.displayText(
-            self.current_lyric_line['words'],
+            current_lyric_line['words'],
             next_words,
             self.scroll_counter,
         )
@@ -172,8 +219,7 @@ class DisplayLyricsApp:
 
 
 def resolve_token_path():
-    base_dir = os.path.dirname(os.path.dirname(__file__))
-    return os.path.join(base_dir, '.cache')
+    return os.path.join(BASE_DIR, '.cache')
 
 
 def print_usage_and_exit():
@@ -181,8 +227,8 @@ def print_usage_and_exit():
     sys.exit(1)
 
 
-if __name__ == '__main__':
-    if len(sys.argv) != 3:
+def main():
+    if len(sys.argv) < 3:
         print_usage_and_exit()
 
     username = sys.argv[1]
@@ -191,3 +237,15 @@ if __name__ == '__main__':
 
     app = DisplayLyricsApp(username, sp_dc, token_path)
     app.run()
+
+
+if __name__ == '__main__':
+    logger = configure_logger()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info('KeyboardInterrupt received, exiting.')
+        sys.exit(0)
+    except Exception:
+        logger.exception('startup error')
+        sys.exit(1)
