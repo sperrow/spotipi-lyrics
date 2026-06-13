@@ -1,2 +1,8 @@
 .DS_Store
 .cache
+.spotipi-config
+python/__pycache__/
+*.py[cod]
+spotipi.log
+spotipi.log.*
+rpi-rgb-led-matrix/
