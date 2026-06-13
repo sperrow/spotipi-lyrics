@@ -67,7 +67,7 @@ fi
 
 # sp_dc Cookie
 echo "Enter your sp_dc cookie for lyrics:"
-echo "(Guide: https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc)"
+echo "(Find this in your Spotify Web Player cookies: https://github.com/libre-lyrics/librelyrics-spotify)"
 if [ ! -z "$SPOTIPY_SP_DC" ]; then
     echo "(Current: ${SPOTIPY_SP_DC:0:10}****${SPOTIPY_SP_DC: -10})"
 fi

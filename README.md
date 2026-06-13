@@ -6,7 +6,7 @@ https://www.youtube.com/shorts/PKM1I0vdbhE
 This project is to display lyrics from the Spotify web api on a 64x32 led matrix.
 * Recommend using a RPi 3 or higher (Zero is too slow for this).
 * Originally forked from Ryan Ward's project for displaying cover art: https://github.com/ryanwa18/spotipi
-* Uses [syrics](https://github.com/akashrchandran/syrics) to fetch the lyrics data from Spotify
+* Uses [librelyrics-spotify](https://github.com/libre-lyrics/librelyrics-spotify) to fetch the lyrics data from Spotify
 ### Getting Started
 Guide: https://sperrow.cc/2024/05/09/spotipi-lyrics.html
 * Create a new application within the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications). Set the redirect uri to any local url such as http://127.0.0.1/callback

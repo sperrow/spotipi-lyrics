@@ -18,7 +18,7 @@ echo "Virtual environment activated"
 
 echo "Installing required libraries:"
 pip3 install spotipy --upgrade
-pip3 install syrics --upgrade
+pip3 install librelyrics-spotify --upgrade
 pip3 install flask --upgrade
 
 install_path=$(pwd)
