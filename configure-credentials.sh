@@ -104,5 +104,6 @@ echo ""
 echo "To edit your configuration:"
 echo "  nano .spotipi-config"
 echo ""
-echo "Restart the service to apply changes:"
-echo "  sudo systemctl restart spotipi"
+echo "Restarting the spotipi service to apply changes..."
+sudo systemctl restart spotipi
+echo "Service restarted."
