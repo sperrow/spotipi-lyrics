@@ -3,6 +3,6 @@
 .spotipi-config
 python/__pycache__/
 *.py[cod]
-spotipi.log
-spotipi.log.*
+spotipy.log
+spotipy.log.*
 rpi-rgb-led-matrix/
