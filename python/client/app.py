@@ -1,8 +1,7 @@
 # app.py
 
-# also importing the request module
 from flask import Flask, render_template, request
-import sys,os
+import os
 import configparser
 import dbus
 
@@ -10,77 +9,99 @@ app = Flask(__name__)
 app.config["CACHE_TYPE"] = "null"
 
 dir = os.path.dirname(__file__)
-filename = os.path.join(dir, '../../config/rgb_options.ini')
-
-# Configuration for the matrix
-config = configparser.ConfigParser()
-config.read(filename)
+config_path = os.path.join(dir, '../../config/rgb_options.ini')
 
 sysbus = dbus.SystemBus()
 systemd1 = sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
 manager = dbus.Interface(systemd1, 'org.freedesktop.systemd1.Manager')
 
-# home route
+
+class ConfigManager:
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.config = configparser.ConfigParser()
+        self.load()
+    
+    def load(self):
+        self.config.read(self.filepath)
+    
+    def get_all_settings(self):
+        return {
+            'brightness': int(self.config['DEFAULT']['brightness']),
+            'width': int(self.config['DEFAULT']['rows']),
+            'height': int(self.config['DEFAULT']['columns']),
+            'power': self.config['DEFAULT']['power'],
+            'refresh_rate': int(self.config['DEFAULT']['refresh_rate'])
+        }
+    
+    def set_value(self, key, value):
+        self.config.set('DEFAULT', key, str(value))
+    
+    def save(self):
+        with open(self.filepath, 'w') as configfile:
+            self.config.write(configfile)
+
+
+config_manager = ConfigManager(config_path)
+
+
+def restart_service():
+    manager.RestartUnit('spotipi.service', 'fail')
+
+
+def get_template_data():
+    settings = config_manager.get_all_settings()
+    return {
+        'brightness': settings['brightness'],
+        'width': settings['width'],
+        'height': settings['height'],
+        'power': settings['power'],
+        'refresh_rate': settings['refresh_rate']
+    }
+
+
 @app.route("/")
 def saved_config():
-    # Brightness from config file
-    brightness = int(config['DEFAULT']['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
-    power = config['DEFAULT']['power']
-    refresh_rate = config['DEFAULT']['refresh_rate']
-    return render_template('index.html', brightness = brightness, width = width, height = height, power = power, refresh_rate = refresh_rate)
+    return render_template('index.html', **get_template_data())
 
-# handling power status
+
 @app.route("/power", methods=["GET", "POST"])
 def handle_power():
     power = request.form['power']
-    brightness = int(config['DEFAULT']['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
-    config.set('DEFAULT', 'power', request.form['power'])
+    config_manager.set_value('power', power)
     if power == 'on':
-      job = manager.StartUnit('spotipi.service', 'replace')
+        manager.StartUnit('spotipi.service', 'replace')
     else:
-      job = manager.StopUnit('spotipi.service', 'replace')
-    return render_template('index.html', brightness = brightness, width = width, height = height, power = power)
+        manager.StopUnit('spotipi.service', 'replace')
+    return render_template('index.html', **get_template_data())
 
-# handling form data
+
 @app.route('/brightness', methods=['POST'])
 def handle_brightness():
-    config.set('DEFAULT', 'brightness', request.form['brightness'])
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
-    power = config['DEFAULT']['power']
-    with open(filename, 'w') as configfile:
-        config.write(configfile)
-    job = manager.RestartUnit('spotipi.service', 'fail')
-    return render_template('index.html', brightness = request.form['brightness'], width = width, height = height, power = power)
+    brightness = request.form['brightness']
+    config_manager.set_value('brightness', brightness)
+    config_manager.save()
+    restart_service()
+    return render_template('index.html', **get_template_data())
 
-# handling form data
+
 @app.route('/size', methods=['POST'])
 def handle_size():
-    config.set('DEFAULT', 'rows', request.form['width'])
-    config.set('DEFAULT', 'columns', request.form['height'])
-    brightness = int(config['DEFAULT']['brightness'])
-    power = config['DEFAULT']['power']
-    with open(filename, 'w') as configfile:
-        config.write(configfile)
-    job = manager.RestartUnit('spotipi.service', 'fail')
-    return render_template('index.html', brightness = brightness, width = int(request.form['width']), height = int(request.form['height']), power = power)
+    config_manager.set_value('rows', request.form['width'])
+    config_manager.set_value('columns', request.form['height'])
+    config_manager.save()
+    restart_service()
+    return render_template('index.html', **get_template_data())
 
-# handling form data
+
 @app.route('/refresh-rate', methods=['POST'])
 def handle_refresh_rate():
-    config.set('DEFAULT', 'refresh_rate', request.form['refresh_rate'])
-    brightness = int(config['DEFAULT']['brightness'])
-    power = config['DEFAULT']['power']
-    width = int(config['DEFAULT']['rows'])
-    height = int(config['DEFAULT']['columns'])
-    with open(filename, 'w') as configfile:
-        config.write(configfile)
-    job = manager.RestartUnit('spotipi.service', 'fail')
-    return render_template('index.html', brightness = brightness, width = width, height = height, refresh_rate = int(request.form['refresh_rate']), power = power)
+    config_manager.set_value('refresh_rate', request.form['refresh_rate'])
+    config_manager.save()
+    restart_service()
+    return render_template('index.html', **get_template_data())
 
-app.run(host='0.0.0.0', port=80) 
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=80) 
 
