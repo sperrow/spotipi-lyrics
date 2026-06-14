@@ -8,7 +8,7 @@ echo "This will remove the spotipi services and virtual environment."
 echo "Your configuration file (.spotipi-config) and token (.cache) will be preserved."
 echo ""
 echo -n "Are you sure? [y/N] "
-read
+read -r
 if [[ ! "$REPLY" =~ ^(yes|y|Y)$ ]]; then
     echo "Uninstall cancelled."
     exit 0

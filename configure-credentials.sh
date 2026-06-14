@@ -15,68 +15,46 @@ else
     echo ""
 fi
 
-install_path=$(pwd)
-
 # Spotify Client ID
 echo "Enter your Spotify Client ID:"
-if [ ! -z "$SPOTIPY_CLIENT_ID" ]; then
-    echo "(Current: ${SPOTIPY_CLIENT_ID:0:10}...)"
+if [ -n "$SPOTIPY_CLIENT_ID" ]; then
+    echo "(Current: $SPOTIPY_CLIENT_ID)"
 fi
-read input
-if [ ! -z "$input" ]; then
-    spotify_client_id=$(echo "$input" | xargs)
-else
-    spotify_client_id="$SPOTIPY_CLIENT_ID"
-fi
+read -r input
+spotify_client_id=$(echo "${input:-$SPOTIPY_CLIENT_ID}" | xargs)
 
 # Spotify Client Secret
 echo "Enter your Spotify Client Secret:"
-if [ ! -z "$SPOTIPY_CLIENT_SECRET" ]; then
-    echo "(Current: ${SPOTIPY_CLIENT_SECRET:0:4}****${SPOTIPY_CLIENT_SECRET: -4})"
+if [ -n "$SPOTIPY_CLIENT_SECRET" ]; then
+    echo "(Current: $SPOTIPY_CLIENT_SECRET)"
 fi
-read input
-if [ ! -z "$input" ]; then
-    spotify_client_secret=$(echo "$input" | xargs)
-else
-    spotify_client_secret="$SPOTIPY_CLIENT_SECRET"
-fi
+read -r input
+spotify_client_secret=$(echo "${input:-$SPOTIPY_CLIENT_SECRET}" | xargs)
 
 # Spotify Redirect URI
 echo "Enter your Spotify Redirect URI:"
-if [ ! -z "$SPOTIPY_REDIRECT_URI" ]; then
+if [ -n "$SPOTIPY_REDIRECT_URI" ]; then
     echo "(Current: $SPOTIPY_REDIRECT_URI)"
 fi
-read input
-if [ ! -z "$input" ]; then
-    spotify_redirect_uri=$(echo "$input" | xargs)
-else
-    spotify_redirect_uri="$SPOTIPY_REDIRECT_URI"
-fi
+read -r input
+spotify_redirect_uri=$(echo "${input:-$SPOTIPY_REDIRECT_URI}" | xargs)
 
 # Spotify Username
 echo "Enter your Spotify username:"
-if [ ! -z "$SPOTIPY_USERNAME" ]; then
+if [ -n "$SPOTIPY_USERNAME" ]; then
     echo "(Current: $SPOTIPY_USERNAME)"
 fi
-read input
-if [ ! -z "$input" ]; then
-    spotify_username=$(echo "$input" | xargs)
-else
-    spotify_username="$SPOTIPY_USERNAME"
-fi
+read -r input
+spotify_username=$(echo "${input:-$SPOTIPY_USERNAME}" | xargs)
 
 # sp_dc Cookie
 echo "Enter your sp_dc cookie for lyrics:"
 echo "(Find this in your Spotify Web Player cookies: https://github.com/libre-lyrics/librelyrics-spotify)"
-if [ ! -z "$SPOTIPY_SP_DC" ]; then
-    echo "(Current: ${SPOTIPY_SP_DC:0:10}****${SPOTIPY_SP_DC: -10})"
+if [ -n "$SPOTIPY_SP_DC" ]; then
+    echo "(Current: $SPOTIPY_SP_DC)"
 fi
-read input
-if [ ! -z "$input" ]; then
-    sp_dc=$(echo "$input" | xargs)
-else
-    sp_dc="$SPOTIPY_SP_DC"
-fi
+read -r input
+sp_dc=$(echo "${input:-$SPOTIPY_SP_DC}" | xargs)
 
 echo ""
 echo "Saving configuration to .spotipi-config"

@@ -42,7 +42,7 @@ echo "...done"
 echo "Installing bindings to venv"
 cd rpi-rgb-led-matrix/ || exit
 sudo make install-python
-cd "${install_path} || exit"
+cd "${install_path}" || exit
 
 echo ""
 echo "======================================="
@@ -81,7 +81,7 @@ echo "======================================="
 echo ""
 echo "A reboot is required for the RGB matrix bindings to take effect."
 echo -n "REBOOT NOW? [y/N] "
-read
+read -r
 if [[ ! "$REPLY" =~ ^(yes|y|Y)$ ]]; then
     echo "Exiting without reboot."
     exit 0
