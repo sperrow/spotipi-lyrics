@@ -144,7 +144,11 @@ class DisplayLyricsApp:
                 self.prev_song_id = current_song_id
                 self.lyrics_retry_song_id = None
             else:
-                self.next_lyrics_retry_time = time.monotonic() + LYRICS_RETRY_SECONDS
+                # If lyrics fetch failed/None, we don't want to log 'No lyrics found' 
+                # every few seconds. We'll set the retry time to silence it.
+                self.next_lyrics_retry_time = time.monotonic() + 3600  # Silence for 1 hour for this song
+                # We still set prev_song_id so we don't keep trying this song
+                self.prev_song_id = current_song_id
 
         return True
 

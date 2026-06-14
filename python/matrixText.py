@@ -38,6 +38,7 @@ class MatrixText(object):
 
         self.offscreen_canvas = self.matrix.CreateFrameCanvas()
         self.font = graphics.Font()
+        self.current_font_path = None
         self.setLanguage("en")
         self.textColor1 = graphics.Color(223, 255, 223)
         self.textColor2 = graphics.Color(52, 255, 103)
