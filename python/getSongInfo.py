@@ -13,7 +13,8 @@ def getSongInfo(username, token_path):
         result = sp.current_user_playing_track()
 
         if result is None:
-            logger.info("No song playing")
+            logger.debug("No song playing")
+            return {}
         else:
             song = result["item"]["name"]
             logger.debug("getSongInfo: %s", song)

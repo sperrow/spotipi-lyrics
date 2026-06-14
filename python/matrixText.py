@@ -59,6 +59,7 @@ class MatrixText(object):
             self.max_lines = 2
             self.scroll_speed = 3
 
+        font_path = os.path.abspath(font_path)
         logger.info("Loading font: %s", font_path)
         if not self.font.LoadFont(font_path):
             logger.error("Failed to load font: %s", font_path)

@@ -58,6 +58,7 @@ class DisplayLyricsApp:
         self.matrix = MatrixText()
 
         self.is_playing = False
+        self.is_idle = False
         self.track = None
         self.lyrics = []
         self.lyrics_synced = False
@@ -108,16 +109,24 @@ class DisplayLyricsApp:
         is_playing = response.get("is_playing", False)
         item = response.get("item")
 
+        if item is None:
+            if not self.is_idle:
+                self.logger.info("No active playback, entering idle state")
+                self.matrix.clear()
+                self.is_idle = True
+                self.is_playing = False
+                self.prev_song_id = None
+            return True
+
+        # If we reach here, we have an item (song is active)
+        self.is_idle = False
+        
         if self.is_playing and not is_playing:
-            self.logger.info("Playback stopped, clearing matrix")
+            self.logger.info("Playback paused, clearing matrix")
             self.matrix.clear()
 
         self.is_playing = is_playing
         self.progress_ms = safe_int(response.get("progress_ms"))
-
-        if item is None:
-            self.logger.warning("No currently playing item returned from Spotify")
-            return True
 
         current_song_id = item.get("id")
         if current_song_id and current_song_id != self.prev_song_id:
