@@ -79,12 +79,11 @@ class MatrixText(object):
         # Create a fresh Font object to avoid issues with re-using the same object
         new_font = graphics.Font()
         res = new_font.LoadFont(font_path)
-        logger.info("LoadFont return: %s (type: %s)", res, type(res))
         
-        # In some versions, LoadFont might return True/False, in others it might return something else.
-        # We check if it succeeded by seeing if the font actually has a height now.
-        if res or (hasattr(new_font, 'height') and new_font.height > 0):
-            logger.info("Successfully loaded font: %s (Height: %d)", font_path, getattr(new_font, 'height', 0))
+        # In this version of the library, LoadFont returns None on success.
+        # We check the font height to verify if it actually loaded.
+        if hasattr(new_font, 'height') and new_font.height > 0:
+            logger.info("Successfully loaded font: %s", font_path)
             self.font = new_font
             self.current_font_path = font_path
         else:
