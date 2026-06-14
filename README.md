@@ -16,31 +16,40 @@ This project is to display lyrics from the Spotify web api on a 64x32 led matrix
 
 Guide: https://sperrow.cc/2024/05/09/spotipi-lyrics.html
 
-- Create a new application within the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications). Set the redirect uri to any local url such as http://127.0.0.1/callback
-- SSH to your raspberry pi to clone the repository
+1. **Spotify Developer Setup**:
+    - Create a new application in the [Spotify developer dashboard](https://developer.spotify.com/dashboard/applications).
+    - Set the redirect URI to `http://127.0.0.1/callback`.
 
-```
-git clone https://github.com/sperrow/spotipi-lyrics
-```
+2. **Installation**:
+   SSH to your Raspberry Pi and run:
 
-- Change into the directory
+    ```bash
+    git clone https://github.com/sperrow/spotipi-lyrics
+    cd spotipi-lyrics
+    sudo bash install.sh
+    ```
 
-```
-cd spotipi-lyrics
-```
+3. **Configuration**:
+   Run the interactive configuration script:
 
-- Install the software: <br />
+    ```bash
+    bash configure-credentials.sh
+    ```
 
-```
-sudo bash install.sh
-```
+    _Note: You can press Enter to keep existing values if you have already configured them._
 
-- Run the configuration script and enter the prompted spotify credentials using
+4. **Authentication**:
+    - The script will provide a URL to visit in your browser.
+    - After authorizing, copy the URL you are redirected to (the one starting with `http://127.0.0.1/callback`) and paste it back into the terminal.
 
-```
-bash configure-credentials.sh
-```
+### Usage
 
-- This will generate a file named `.spotipi-config` which will be used for authentication
-    - A url will show up in the terminal window and you must copy this into your own web broswer
-    - The url will redirect you to another url and you need to copy/paste this in the terminal when prompted.
+The service will start automatically on reboot. You can also manage it manually: `sudo systemctl restart spotipi`
+
+### Troubleshooting
+
+Logs are stored in `spotipy.log` in the project root. To view them in real-time:
+
+```bash
+tail -f spotipy.log
+```
