@@ -84,11 +84,11 @@ cat > .spotipi-config << EOF
 # Spotipi Configuration
 # Edit this file to change settings, then run: sudo systemctl restart spotipi
 
-SPOTIPY_CLIENT_ID=$spotify_client_id
-SPOTIPY_CLIENT_SECRET=$spotify_client_secret
-SPOTIPY_REDIRECT_URI=$spotify_redirect_uri
-SPOTIPY_USERNAME=$spotify_username
-SPOTIPY_SP_DC=$sp_dc
+SPOTIPY_CLIENT_ID='$spotify_client_id'
+SPOTIPY_CLIENT_SECRET='$spotify_client_secret'
+SPOTIPY_REDIRECT_URI='$spotify_redirect_uri'
+SPOTIPY_USERNAME='$spotify_username'
+SPOTIPY_SP_DC='$sp_dc'
 EOF
 chmod 600 .spotipi-config
 

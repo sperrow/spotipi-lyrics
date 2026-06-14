@@ -40,9 +40,9 @@ sudo rm rgb-matrix.sh
 echo "...done"
 
 echo "Installing bindings to venv"
-cd rpi-rgb-led-matrix/
+cd rpi-rgb-led-matrix/ || exit
 sudo make install-python
-cd ${install_path}
+cd "${install_path} || exit"
 
 echo ""
 echo "======================================="
