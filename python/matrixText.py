@@ -60,9 +60,20 @@ class MatrixText(object):
             self.scroll_speed = 3
 
         font_path = os.path.abspath(font_path)
+        
+        # If the font path hasn't changed, we don't need to reload
+        if hasattr(self, 'current_font_path') and self.current_font_path == font_path:
+            return
+
         logger.info("Loading font: %s", font_path)
-        if not self.font.LoadFont(font_path):
-            logger.error("Failed to load font: %s", font_path)
+        if not os.path.exists(font_path):
+            logger.error("Font file does not exist: %s", font_path)
+            return
+
+        if self.font.LoadFont(font_path):
+            self.current_font_path = font_path
+        else:
+            logger.error("Failed to load font: %s (Check if it is a valid .bdf file)", font_path)
 
     def displayText(self, line_1, line_2, scroll_counter, is_lyrics=True):
         self.offscreen_canvas.Clear()

@@ -156,6 +156,10 @@ class DisplayLyricsApp:
 
     def fetch_lyrics_for_current_track(self, track_id):
         response = getLyrics(self.sp_dc, track_id)
+        if response is None:
+            self.logger.info("No lyrics found for track %s", track_id)
+            return False
+            
         if not isinstance(response, dict) or "lyrics" not in response:
             self.logger.error("getLyrics returned invalid data: %s", response)
             return False
