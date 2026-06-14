@@ -13,7 +13,6 @@ SKIP_SECONDS = 0.5
 FETCH_SECONDS_PLAYING = 1
 FETCH_SECONDS_IDLE = 5
 RETRY_SECONDS = 10
-LYRICS_RETRY_SECONDS = 10
 
 
 def configure_logger():
@@ -120,7 +119,7 @@ class DisplayLyricsApp:
 
         # If we reach here, we have an item (song is active)
         self.is_idle = False
-        
+
         if self.is_playing and not is_playing:
             self.logger.info("Playback paused, clearing matrix")
             self.matrix.clear()
@@ -144,9 +143,11 @@ class DisplayLyricsApp:
                 self.prev_song_id = current_song_id
                 self.lyrics_retry_song_id = None
             else:
-                # If lyrics fetch failed/None, we don't want to log 'No lyrics found' 
+                # If lyrics fetch failed/None, we don't want to log 'No lyrics found'
                 # every few seconds. We'll set the retry time to silence it.
-                self.next_lyrics_retry_time = time.monotonic() + 3600  # Silence for 1 hour for this song
+                self.next_lyrics_retry_time = (
+                    time.monotonic() + 3600
+                )  # Silence for 1 hour for this song
                 # We still set prev_song_id so we don't keep trying this song
                 self.prev_song_id = current_song_id
 
@@ -163,7 +164,7 @@ class DisplayLyricsApp:
         if response is None:
             self.logger.info("No lyrics found for track %s", track_id)
             return False
-            
+
         if not isinstance(response, dict) or "lyrics" not in response:
             self.logger.error("getLyrics returned invalid data: %s", response)
             return False
