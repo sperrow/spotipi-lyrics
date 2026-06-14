@@ -39,6 +39,7 @@ class MatrixText(object):
         self.offscreen_canvas = self.matrix.CreateFrameCanvas()
         self.font = graphics.Font()
         self.current_font_path = None
+        self.failed_fonts = set()
         self.setLanguage("en")
         self.textColor1 = graphics.Color(223, 255, 223)
         self.textColor2 = graphics.Color(52, 255, 103)
@@ -63,18 +64,32 @@ class MatrixText(object):
         font_path = os.path.abspath(font_path)
         
         # If the font path hasn't changed, we don't need to reload
-        if hasattr(self, 'current_font_path') and self.current_font_path == font_path:
+        if self.current_font_path == font_path:
             return
 
-        logger.info("Loading font: %s", font_path)
+        # If it failed before, don't keep trying and logging
+        if font_path in self.failed_fonts:
+            return
+
         if not os.path.exists(font_path):
             logger.error("Font file does not exist: %s", font_path)
+            self.failed_fonts.add(font_path)
             return
 
-        if self.font.LoadFont(font_path):
+        # Create a fresh Font object to avoid issues with re-using the same object
+        new_font = graphics.Font()
+        res = new_font.LoadFont(font_path)
+        logger.info("LoadFont return: %s (type: %s)", res, type(res))
+        
+        # In some versions, LoadFont might return True/False, in others it might return something else.
+        # We check if it succeeded by seeing if the font actually has a height now.
+        if res or (hasattr(new_font, 'height') and new_font.height > 0):
+            logger.info("Successfully loaded font: %s (Height: %d)", font_path, getattr(new_font, 'height', 0))
+            self.font = new_font
             self.current_font_path = font_path
         else:
-            logger.error("Failed to load font: %s (Check if it is a valid .bdf file)", font_path)
+            logger.error("Failed to load font: %s (Return: %s)", font_path, res)
+            self.failed_fonts.add(font_path)
 
     def displayText(self, line_1, line_2, scroll_counter, is_lyrics=True):
         self.offscreen_canvas.Clear()
