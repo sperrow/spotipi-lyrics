@@ -89,8 +89,11 @@ class DisplayLyricsApp:
 
         try:
             fetch_succeeded = self.fetch_spotify_state()
-        except Exception:
-            self.logger.exception("Spotify state fetch error")
+        except Exception as e:
+            if "timeout" in str(e).lower():
+                self.logger.warning("Spotify API connection timed out (will retry)")
+            else:
+                self.logger.exception("Spotify state fetch error")
             fetch_succeeded = False
 
         if fetch_succeeded:
