@@ -9,7 +9,7 @@ def getSongInfo(username, token_path):
     scope = "user-read-currently-playing"
     token = util.prompt_for_user_token(username, scope, cache_path=token_path)
     if token:
-        sp = spotipy.Spotify(auth=token)
+        sp = spotipy.Spotify(auth=token, requests_timeout=10)
         result = sp.current_user_playing_track()
 
         if result is None:
